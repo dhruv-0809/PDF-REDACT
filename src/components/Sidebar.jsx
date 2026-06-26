@@ -13,8 +13,9 @@ export default function Sidebar({ onScanRegex, onScanAI, onExport, onPreview, is
   return (
     <aside className={`sidebar liquid-glass ${!isOpen ? 'closed' : ''}`} style={isOpen ? { width: `${width}px` } : {}}>
       <div className="sidebar-scrollable-content">
-        <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: '1.5rem', paddingTop: '0.5rem' }}>
-          <img src={`${import.meta.env.BASE_URL}logo2.svg`} alt="Sidebar Logo" style={{ height: '35px', width: 'auto', objectFit: 'contain' }} />
+        <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: '1.5rem', paddingTop: '0.5rem', gap: '0.75rem' }}>
+          <img src={`${import.meta.env.BASE_URL}logo2.svg`} alt="Sidebar Logo" style={{ height: '36px', width: 'auto', objectFit: 'contain' }} />
+          <span style={{ color: 'white', fontWeight: '700', fontSize: '1.4rem', letterSpacing: '-0.2px' }}>Redact PDF</span>
         </div>
         <div className="sidebar-section">
         <h3 className="section-title">Automated Scanners</h3>

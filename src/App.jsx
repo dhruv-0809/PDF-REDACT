@@ -358,20 +358,13 @@ export default function App() {
         <DropZone onFileSelect={handleFileSelect} />
       ) : (
         <div className="workspace">
-          {/* Logo & Menu Toggle Header */}
-          <div style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', zIndex: 200, display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(255, 255, 255, 0.05)', padding: '0.4rem 1rem 0.4rem 0.4rem', borderRadius: '12px', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-              <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="Redact PDF Logo" style={{ height: '36px', width: 'auto', objectFit: 'contain', borderRadius: '8px' }} />
-              <span style={{ color: 'white', fontWeight: '600', fontSize: '1.1rem', letterSpacing: '0.5px' }}>Redact PDF</span>
-            </div>
-            <button 
-              className="sidebar-toggle" 
-              style={{ position: 'relative', top: 'auto', left: 'auto' }}
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            >
-              {isSidebarOpen ? '✕ Hide Menu' : '☰ Show Menu'}
-            </button>
-          </div>
+          <button 
+            className="sidebar-toggle" 
+            style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', zIndex: 200 }}
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          >
+            {isSidebarOpen ? '✕ Hide Menu' : '☰ Show Menu'}
+          </button>
           
           <div style={{ display: 'flex', position: 'relative', flexShrink: 0 }}>
             <Sidebar
