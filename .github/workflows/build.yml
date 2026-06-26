@@ -1,39 +1,54 @@
-name: Check Build
+name: Build and Deploy to GitHub Pages
 
-# 1. WHEN TO RUN: This triggers the build every time you push code to the 'main' branch
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
-# 2. WHAT TO DO: The actual instructions
+# IMPORTANT: These permissions are required for the workflow to push to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
+  # --- JOB 1: BUILD THE PROJECT ---
   build:
-    # Uses the latest version of Ubuntu as the virtual machine
     runs-on: ubuntu-latest
-
     steps:
-    # Downloads your code onto the GitHub virtual machine
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install Dependencies
+        run: npm ci
+        
+      - name: Run Build
+        run: npm run build
+        
+      # This grabs your build folder and prepares it specifically for GitHub Pages
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # CHANGE THIS if your build folder is named something else (e.g., './build' for Create React App)
+          path: './dist' 
 
-    # Installs Node.js
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20' # Change this if your project requires a different Node version
-
-    # Installs your project dependencies (like running npm install)
-    - name: Install Dependencies
-      run: npm ci
-
-    # Runs your build command
-    - name: Run Build
-      run: npm run build
-
-      - name: Save Build Folder
-      uses: actions/upload-artifact@v4
-      with:
-        name: my-build-files
-        # IMPORTANT: Change 'dist' to whatever folder your framework outputs.
-        # (e.g., 'build' for Create React App, 'dist' for Vite, '.next' for Next.js)
-        path: dist/
+  # --- JOB 2: DEPLOY TO THE INTERNET ---
+  deploy:
+    # This tells GitHub to wait until the "build" job finishes successfully before deploying
+    needs: build 
+    runs-on: ubuntu-latest
+    
+    # Links this job to your GitHub Pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+      
+    steps:
+      # This actually pushes the compiled code to the live server
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
