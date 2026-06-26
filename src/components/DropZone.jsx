@@ -41,7 +41,7 @@ export default function DropZone({ onFileSelect }) {
     <div className="app-container">
       <div className="header">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
-          <img src="/logo2.svg" alt="Redact PDF Logo" style={{ height: '60px', width: 'auto', objectFit: 'contain' }} />
+          <img src={`${import.meta.env.BASE_URL}logo2.svg`} alt="Redact PDF Logo" style={{ height: '60px', width: 'auto', objectFit: 'contain' }} />
           <h1 style={{ fontSize: '3.5rem', margin: 0, fontWeight: '800', background: 'linear-gradient(135deg, #ffffff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-1px' }}>
             Redact PDF
           </h1>
