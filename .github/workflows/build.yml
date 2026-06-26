@@ -1,0 +1,31 @@
+name: Check Build
+
+# 1. WHEN TO RUN: This triggers the build every time you push code to the 'main' branch
+on:
+  push:
+    branches: [ "main" ]
+
+# 2. WHAT TO DO: The actual instructions
+jobs:
+  build:
+    # Uses the latest version of Ubuntu as the virtual machine
+    runs-on: ubuntu-latest
+
+    steps:
+    # Downloads your code onto the GitHub virtual machine
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # Installs Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20' # Change this if your project requires a different Node version
+
+    # Installs your project dependencies (like running npm install)
+    - name: Install Dependencies
+      run: npm ci
+
+    # Runs your build command
+    - name: Run Build
+      run: npm run build
