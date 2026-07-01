@@ -30,7 +30,7 @@ export default function Sidebar({ onScanRegex, onScanAI, onExport, onPreview, is
           <button className="btn btn-ai" onClick={onScanAI} disabled={isScanning}>
             Scan with AI
           </button>
-          <span className="byline">Uses Gemini Cloud to analyze document semantics for names, organizations, and sensitive text.</span>
+          <span className="byline">Uses an on-device Local AI model to analyze document semantics for names, organizations, and sensitive text.</span>
         </div>
       </div>
 

@@ -9,7 +9,7 @@
 //   5. User clicks "Preview" or "Export" → redactor.js generates the output
 // =============================================================================
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import DropZone from './components/DropZone';
 import PdfViewer from './components/PdfViewer';
 import Sidebar from './components/Sidebar';
@@ -63,7 +63,6 @@ export default function App() {
   const [words, setWords] = useState([]);            // Extracted word objects from pdfParser
   const [redactions, setRedactions] = useState([]);  // Active redaction boxes (regex + AI)
   const [previewUrl, setPreviewUrl] = useState(null); // Blob URL for the preview modal
-  const [showCloudWarning, setShowCloudWarning] = useState(false); // Controls the AI warning modal
   const [showResetWarning, setShowResetWarning] = useState(false); // Controls the reset warning modal
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 900); // Toggle for sidebar visibility
   const [sidebarWidth, setSidebarWidth] = useState(350);
@@ -102,6 +101,40 @@ export default function App() {
 
   const [isScanning, setIsScanning] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState('');
+  
+  // AI Web Worker setup
+  const aiWorkerRef = useRef(null);
+
+  useEffect(() => {
+    aiWorkerRef.current = new Worker(new URL('./services/ai.worker.js', import.meta.url), { type: 'module' });
+
+    aiWorkerRef.current.onmessage = (event) => {
+      const { status, results, error, data } = event.data;
+      if (status === 'progress') {
+        // transformers.js sends progress updates (e.g. downloading model chunks)
+        const prog = data && data.progress ? Math.round(data.progress) : 0;
+        setLoadingStatus(`Loading AI Model... ${prog}%`);
+      } else if (status === 'inferencing') {
+        setLoadingStatus('Analyzing text contextually...');
+      } else if (status === 'complete') {
+        if (results && results.length > 0) {
+          setRedactions((prev) => mergeRedactions(prev, results));
+        } else {
+          alert('AI scan completed. No sensitive entities detected.');
+        }
+        setIsScanning(false);
+        setLoadingStatus('');
+      } else if (status === 'error') {
+        alert('Error running AI scan: ' + error);
+        setIsScanning(false);
+        setLoadingStatus('');
+      }
+    };
+
+    return () => {
+      aiWorkerRef.current?.terminate();
+    };
+  }, []);
   // Handler: File Selection — extract text from the PDF
   // -------------------------------------------------------------------------
   const handleFileSelect = async (selectedFile) => {
@@ -159,52 +192,13 @@ export default function App() {
   };
 
   // -------------------------------------------------------------------------
-  // Handler: AI Scan — run Gemini model on Express backend
+  // Handler: AI Scan — run local NER model in Web Worker
   // -------------------------------------------------------------------------
   const handleScanAI = () => {
     if (words.length === 0) return;
-    setShowCloudWarning(true);
-  };
-
-  const confirmScanAI = async () => {
-    setShowCloudWarning(false);
     setIsScanning(true);
-    setLoadingStatus('Scanning with Gemini AI...');
-
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-      const response = await fetch(`${apiUrl}/api/scan-ai`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ words })
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || `HTTP error ${response.status}`);
-      }
-
-      const res = await response.json();
-      
-      if (res.warning) {
-        alert(res.warning);
-      }
-
-      if (res.results && res.results.length > 0) {
-        // Merge AI results with existing redactions using custom deduplication logic
-        setRedactions((prev) => mergeRedactions(prev, res.results));
-      } else if (!res.warning) {
-        alert('Gemini scan completed. No additional PII detected.');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Error running Gemini AI scan: ' + err.message);
-    } finally {
-      setIsScanning(false);
-      setLoadingStatus('');
-    }
+    setLoadingStatus('Initializing AI Worker...');
+    aiWorkerRef.current.postMessage({ words });
   };
 
   // -------------------------------------------------------------------------
@@ -404,28 +398,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Cloud Warning Modal */}
-      {showCloudWarning && (
-        <div className="modal-backdrop">
-          <div className="warning-modal-content">
-            <div className="warning-icon">⚠️</div>
-            <h3 className="warning-title">Cloud Analysis Warning</h3>
-            <p className="warning-text">
-              This action will securely transmit the extracted text from your document to the Gemini Cloud API for semantic analysis.
-              <br /><br />
-              Do you wish to proceed?
-            </p>
-            <div className="warning-actions">
-              <button className="btn btn-highlight" onClick={() => setShowCloudWarning(false)}>
-                Go Back (Cancel)
-              </button>
-              <button className="btn btn-danger" onClick={confirmScanAI}>
-                Proceed to Cloud
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Reset Warning Modal */}
       {showResetWarning && (
